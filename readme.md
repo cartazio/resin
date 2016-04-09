@@ -1,4 +1,8 @@
-# Truss : High performance Planar (2D) Variable binders
+# Resin : High performance Planar (2D) Variable binders
 
-Truss is an experiment in variable binder design inspired by Bound
-and related libraries, with
+Resin is an experiment in variable binder design inspired by binder libraries
+such as Bound and UnBound (no relation), with the goal being to provide
+high performance and excellent abstraction on as long a space of syntaxes as
+is feasible.
+
+
