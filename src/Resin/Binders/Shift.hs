@@ -4,17 +4,22 @@
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Resin.Binders.Shift where
 import Data.Typeable(Typeable)
 import GHC.Prim(Proxy#,proxy#)
-import Numeric.Natural
 import Data.Semigroupoid
 import Data.Semigroupoid.Ob
+import Data.Groupoid
+
+type (:-|>) a b = Shift a b
+
+infix 5 :-|>
 
 data Shift :: * -> * -> * where
-  Refl :: Typeable a =>  Proxy# a -> Shift a a
-  Composite :: (Typeable from,Typeable to ) => !Natural -> Proxy# from -> Proxy# to -> Shift from to
+  Refl :: Typeable a =>  Proxy# a ->  a :-|> a
+  Composite :: (Typeable from,Typeable to ) => !Integer -> Proxy# from -> Proxy# to -> from :-|> to
 
 {-
 The Semigroupoid instance of Shift should have a CPP DEBUG mode
@@ -26,7 +31,14 @@ get a very very 'natural' inverse operator, though
 not sure yet if its a useful idea.
 It may wind up being helpful when working with explicit substitutions/contexts
 but I'm not sure yet.
+
+likewise, the typeables may only matter for debugging purposes, if at all
  -}
+
+instance Groupoid Shift where
+ inv (Refl p) = Refl p
+ inv (Composite n pf pt) = Composite (negate n) pt pf
+
 
 instance Semigroupoid Shift where
  o (Refl _p) f = f
