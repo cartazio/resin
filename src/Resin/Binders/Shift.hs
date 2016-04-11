@@ -6,7 +6,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Resin.Binders.Shift where
+module Resin.Binders.Shift(
+  type (:-|>)
+  ,Shift(Refl) -- | @Refl@ is safe to export
+
+  )  where
 import Data.Typeable(Typeable)
 import GHC.Prim(Proxy#,proxy#)
 import Data.Semigroupoid
@@ -20,7 +24,7 @@ infix 5 :-|>
 data Shift :: * -> * -> * where
   Refl :: Typeable a =>  Proxy# a ->  a :-|> a
   Composite :: (Typeable from,Typeable to ) => !Integer -> Proxy# from -> Proxy# to -> from :-|> to
-
+  deriving(Typeable)
 {-
 The Semigroupoid instance of Shift should have a CPP DEBUG mode
 that checks if the tyepables are actually equal
@@ -33,6 +37,11 @@ It may wind up being helpful when working with explicit substitutions/contexts
 but I'm not sure yet.
 
 likewise, the typeables may only matter for debugging purposes, if at all
+
+
+When the 'Shift' datatype is used to represent info in a "TreeShift"
+constructor of a Monadic AST, we want to enforce that we can't build an
+AST that has sequence (TreeShift (TreeShift ..))
  -}
 
 instance Groupoid Shift where
