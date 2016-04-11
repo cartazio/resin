@@ -55,7 +55,7 @@ library
                       ,Resin.Calculus.Derivatives
                       ,Resin.Binders.Shift
                       ,Resin.Binders.GShift
-
+                      ,Resin.Binders.SymmetricShift
   -- Modules included in this library but not exported.
   -- other-modules:
 
