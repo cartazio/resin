@@ -56,6 +56,7 @@ library
                       ,Resin.Binders.Shift
                       ,Resin.Binders.GShift
                       ,Resin.Binders.SymmetricShift
+                      ,Resin.Binders.ASymmetricShift
   -- Modules included in this library but not exported.
   -- other-modules:
 
@@ -63,7 +64,7 @@ library
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:      base >=4.8 && <4.9
+  build-depends:      base >=4.8 && <4.10
                       ,ghc-prim >= 0.4 && < 0.6
                       ,semigroupoids >= 5.0 && <  5.1
                       ,profunctors >= 5.2 && < 5.3
