@@ -56,7 +56,7 @@ library
                       ,Resin.Binders.Shift
                       ,Resin.Binders.GShift
                       ,Resin.Binders.SymmetricShift
-                      ,Resin.Binders.ASymmetricShift
+                      ,Resin.Binders.IndexedPath
   -- Modules included in this library but not exported.
   -- other-modules:
 
