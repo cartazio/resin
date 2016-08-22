@@ -57,7 +57,12 @@ treeElimination :: TestEquality f => Inject f a b -> Extract f b c -> {- Maybe W
 treeElimination (MonoId fa) (Dual  (MonoId fb)) = case testEquality fa fb of
                                                           Just (Refl) -> Just TreeRefl
                                                           Nothing -> Nothing
+--- treeElimination   PolyId _
+--- treeElimination   (MonoId _) (Dual PolyId)
+--- treeElimination   (MonoId _) (Dual (CompactCompose _ _ _))
+--- treeElimination   (CompactCompose _ _ _) _
 -- FINISH the rest of the cases
+
 
 
 {-
