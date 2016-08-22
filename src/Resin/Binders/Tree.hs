@@ -8,8 +8,9 @@ module Resin.Binders.Tree where
 import Data.Kind
 import Numeric.Natural
 import Data.Semigroupoid
-import Data.Coerce
+--import Data.Coerce
 import Data.Type.Equality
+import qualified Data.Semigroupoid.Dual as DL
 
 
 data Inject :: (k -> Type ) -> k -> k -> Type where
@@ -27,12 +28,16 @@ instance Semigroupoid (Inject f) where
     `o` (CompactCompose cin _cmiddle1 sizeright) = CompactCompose cin cout (sizeright + sizeleft)
       --- TODO is this case to lazy?
 
-
+-- extract is the dual of Inject
+-- aka Data.Semigroupoid.Dual is nearly the exact same type :)
 newtype Extract :: (k -> Type ) -> k -> k -> Type where
-  ExtractCon :: (Inject f a b) -> Extract f a b
+  Dual :: (DL.Dual (Inject f) a b ) -> Extract f a b
+-- not sure if this is the right design vs
+  -- :: Inject f b a -> Extract f a b  --- (which has more explicit duality and less newtypery)
+
 
 instance Semigroupoid (Extract f) where
-  o = \ l  r -> ExtractCon  $ coerce l  `o` coerce r
+  o = \ (Dual l)  (Dual r) -> Dual  $   l `o` r
 
 
 data TreeEq :: (k -> Type ) -> k -> k -> Type where
@@ -42,7 +47,7 @@ data TreeEq :: (k -> Type ) -> k -> k -> Type where
 
 --- this might limit a,c to being kind (or sort?) * / Type for now, but thats OK ??
 treeElimination :: TestEquality f => Inject f a b -> Extract f b c -> {- Maybe Wrapped? -} Maybe (TreeEq f a c)
-treeElimination (MonoId fa) (ExtractCon (MonoId fb)) = case testEquality fa fb of
+treeElimination (MonoId fa) (Dual (DL.Dual (MonoId fb))) = case testEquality fa fb of
                                                           Just (Refl) -> Just TreeRefl
                                                           Nothing -> Nothing
 -- FINISH the rest of the cases
