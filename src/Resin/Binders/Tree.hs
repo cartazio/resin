@@ -10,7 +10,14 @@ import Numeric.Natural
 import Data.Semigroupoid
 --import Data.Coerce
 import Data.Type.Equality
-import qualified Data.Semigroupoid.Dual as DL
+--import qualified Data.Semigroupoid.Dual as DL
+
+
+{-
+This module models binders which respect scope having a tree shaped topology
+or at least it models some ideas about (finite?) paths on  (finite??!) trees
+
+-}
 
 
 data Inject :: (k -> Type ) -> k -> k -> Type where
