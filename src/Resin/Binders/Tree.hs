@@ -24,6 +24,8 @@ data Inject :: (k -> Type ) -> k -> k -> Type where
   PolyId :: forall f a . Inject f a a
   MonoId :: forall f  i .  (f i) -> Inject f i i
   CompactCompose :: forall f i j . (f i) -> (f j)  -> Natural -> Inject f i j  -- i is origin/root j is leaf
+  -- compact compose is unsafe for users, but should be exposed in a .Internal
+  -- module
 
 instance Semigroupoid (Inject f) where
    --PolyId `o`  PolyId =  PolyId
@@ -55,12 +57,16 @@ data TreeEq :: (k -> Type ) -> k -> k -> Type where
 --- this might limit a,c to being kind (or sort?) * / Type for now, but thats OK ??
 treeElimination :: TestEquality f => Inject f a b -> Extract f b c -> {- Maybe Wrapped? -} Maybe (TreeEq f a c)
 treeElimination (MonoId fa) (Dual  (MonoId fb)) = case testEquality fa fb of
-                                                          Just (Refl) -> Just TreeRefl
+                                                          Just Refl -> Just TreeRefl
                                                           Nothing -> Nothing
---- treeElimination   PolyId _
---- treeElimination   (MonoId _) (Dual PolyId)
---- treeElimination   (MonoId _) (Dual (CompactCompose _ _ _))
---- treeElimination   (CompactCompose _ _ _) _
+treeElimination   PolyId (Dual PolyId)                      = Just TreeRefl
+treeElimination   (MonoId _fa) (Dual PolyId)                = Just TreeRefl
+treeElimination   PolyId (Dual (MonoId _fc))                = Just TreeRefl
+treeElimination   PolyId (Dual (CompactCompose _ _ _))      = error "finish tree elim"
+treeElimination   (MonoId _) (Dual (CompactCompose _ _ _))  = error "finish tree elim"
+treeElimination   (CompactCompose _ _ _) (Dual (MonoId _)) = error "finish tree elim"
+treeElimination   (CompactCompose _ _ _) (Dual (CompactCompose _ _ _)) = error "finish tree elim"
+treeElimination   (CompactCompose _ _ _) (Dual PolyId) = error "finish tree elimi "
 -- FINISH the rest of the cases
 
 
