@@ -19,11 +19,16 @@ or at least it models some ideas about (finite?) paths on  (finite??!) trees
 
 -}
 
+{- | `Inject` is about
 
+-}
 data Inject :: (k -> Type ) -> k -> k -> Type where
   PolyId :: forall f a . Inject f a a
   MonoId :: forall f  i .  (f i) -> Inject f i i
-  CompactCompose :: forall f i j . (f i) -> (f j)  -> Natural -> Inject f i j  -- i is origin/root j is leaf
+  -- should MonoId be strict in its argument?
+  CompactCompose :: forall f i j . (f i) -> (f j)  -> Natural -> Inject f i j
+   -- i is origin/root
+   -- j is leaf
   -- compact compose is unsafe for users, but should be exposed in a .Internal
   -- module
 
