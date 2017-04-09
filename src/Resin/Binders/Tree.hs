@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Resin.Binders.Tree where
 import Data.Kind
@@ -19,25 +20,40 @@ or at least it models some ideas about (finite?) paths on  (finite??!) trees
 
 -}
 
+
+data IxEq :: (k -> Type ) -> k -> k   -> Type where
+   PolyRefl :: forall f i .  IxEq f i i
+   MonoRefl :: forall f i . f i -> IxEq f i i
+
+--testIxEquality :: TestEquality f => IxEq f a b -> IxEq f b c ->
+
+instance TestEquality f => TestEquality (IxEq f i) where
+  testEquality (MonoRefl f1) (MonoRefl f2) = testEquality f1 f2
+  testEquality (PolyRefl  )(MonoRefl _f2) = Just Refl
+  testEquality (MonoRefl _f1) (PolyRefl  ) = Just Refl
+  testEquality (PolyRefl ) (PolyRefl ) = Just Refl
+
 {- | `Inject` is about
 
 -}
 data Inject :: (k -> Type ) -> k -> k -> Type where
-  PolyId :: forall f a . Inject f a a
-  MonoId :: forall f  i .  (f i) -> Inject f i i
+  InjectRefl :: forall f a b . IxEq f a b->  Inject f a b
+  --MonoId :: forall f  i .  (f i) -> Inject f i i
   -- should MonoId be strict in its argument?
-  CompactCompose :: forall f i j . (f i) -> (f j)  -> Natural -> Inject f i j
+  CompactCompose :: forall f i j e. (IxEq f i e) -> (IxEq f  e j  )  -> Natural -> Inject f i j
    -- i is origin/root
    -- j is leaf
   -- compact compose is unsafe for users, but should be exposed in a .Internal
   -- module
 
+
+
 instance Semigroupoid (Inject f) where
    --PolyId `o`  PolyId =  PolyId
-   PolyId `o` (!f) = f
-   (MonoId _g) `o` (!f) = f
-   cc@(CompactCompose _ _ _) `o` (MonoId _) = cc
-   cc@(CompactCompose _ _ _) `o` PolyId = cc
+   (InjectRefl (MonoRefl _p)) `o` (!f) = f
+   (InjectRefl (PolyRefl)) `o`  (!f) = f
+--
+   cc@(CompactCompose _ _ _) `o` (InjectRefl  (MonoRefl)) = cc
    (CompactCompose _cmiddle2 cout sizeleft)
     `o` (CompactCompose cin _cmiddle1 sizeright) = CompactCompose cin cout (sizeright + sizeleft)
       --- TODO is this case to lazy?
@@ -59,19 +75,34 @@ data TreeEq :: (k -> Type ) -> k -> k -> Type where
   TreeExtract :: Extract f a b -> TreeEq f a b
   TreeRefl :: TreeEq f c c
 
+
 --- this might limit a,c to being kind (or sort?) * / Type for now, but thats OK ??
 treeElimination :: TestEquality f => Inject f a b -> Extract f b c -> {- Maybe Wrapped? -} Maybe (TreeEq f a c)
-treeElimination (MonoId fa) (Dual  (MonoId fb)) = case testEquality fa fb of
-                                                          Just Refl -> Just TreeRefl
-                                                          Nothing -> Nothing
-treeElimination   PolyId (Dual PolyId)                      = Just TreeRefl
-treeElimination   (MonoId _fa) (Dual PolyId)                = Just TreeRefl
-treeElimination   PolyId (Dual (MonoId _fc))                = Just TreeRefl
-treeElimination   PolyId (Dual (CompactCompose _ _ _))      = error "finish tree elim"
-treeElimination   (MonoId _) (Dual (CompactCompose _ _ _))  = error "finish tree elim"
-treeElimination   (CompactCompose _ _ _) (Dual (MonoId _)) = error "finish tree elim"
-treeElimination   (CompactCompose _ _ _) (Dual (CompactCompose _ _ _)) = error "finish tree elim"
-treeElimination   (CompactCompose _ _ _) (Dual PolyId) = error "finish tree elimi "
+treeElimination (InjectRefl fa) (Dual  (InjectRefl fb)) =
+             case testEquality fa fb of
+              -- VARIABLE EQUALITY, are they the same?
+              Just Refl -> Just TreeRefl
+              Nothing -> Nothing -- THIS SHOULDN"T BE
+
+treeElimination (CompactCompose fa fb1 n1) (Dual (CompactCompose fc fb2 n2)) =
+    case testEquality fb1 fb2 of  -- this may be needless
+        Nothing -> error "defensive programming explosion of sadness"
+        Just Refl -> case (compare n1 n2, max n1 n2 - min n1 n2) of
+                        (EQ, _ )-> case _wat fa fc of
+                                      Nothing -> Nothing
+                                      Just Refl -> Just TreeRefl
+                        (GT, m )-> Just $ TreeInject (CompactCompose fa fc  m)
+                        (LT, m ) -> Just $ TreeExtract (Dual (CompactCompose fc fa m))
+--treeElimination   p@PolyId (Dual (CompactCompose fc fb n))
+--        | n == 0 = case testEquality fb fc of
+--                      Nothing -> Nothing
+--                      Just Refl -> Just TreeRefl
+--        | otherwise = Just $ TreeExtract (Dual (CompactCompose fc p n ))
+treeElimination   f@(InjectRefl fa) d@(Dual (CompactCompose _ _ _))  =
+      treeElimination (CompactCompose fa fa 0) d
+treeElimination   c@(CompactCompose _ _ _) (Dual fd@(InjectRefl fc)) =
+      treeElimination c (Dual (CompactCompose fc fc 0))
+
 -- FINISH the rest of the cases
 
 
