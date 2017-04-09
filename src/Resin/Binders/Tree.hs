@@ -10,6 +10,7 @@ import Data.Kind
 import Numeric.Natural
 import Data.Semigroupoid
 --import Data.Coerce
+import Unsafe.Coerce (unsafeCoerce)
 import Data.Type.Equality
 --import qualified Data.Semigroupoid.Dual as DL
 
@@ -22,7 +23,7 @@ or at least it models some ideas about (finite?) paths on  (finite??!) trees
 
 
 data IxEq :: (k -> Type ) -> k -> k   -> Type where
-   PolyRefl :: forall f i .  IxEq f i i
+   PolyRefl ::  IxEq f i i
    MonoRefl :: forall f i . f i -> IxEq f i i
 
 --testIxEquality :: TestEquality f => IxEq f a b -> IxEq f b c ->
@@ -40,7 +41,7 @@ data Inject :: (k -> Type ) -> k -> k -> Type where
   InjectRefl :: forall f a b . IxEq f a b->  Inject f a b
   --MonoId :: forall f  i .  (f i) -> Inject f i i
   -- should MonoId be strict in its argument?
-  CompactCompose :: forall f i j e. (IxEq f i e) -> (IxEq f  e j  )  -> Natural -> Inject f i j
+  CompactCompose :: forall f i j . (IxEq f i i) -> (IxEq f  j j  )  -> Natural -> Inject f i j
    -- i is origin/root
    -- j is leaf
   -- compact compose is unsafe for users, but should be exposed in a .Internal
@@ -52,8 +53,8 @@ instance Semigroupoid (Inject f) where
    --PolyId `o`  PolyId =  PolyId
    (InjectRefl (MonoRefl _p)) `o` (!f) = f
    (InjectRefl (PolyRefl)) `o`  (!f) = f
---
-   cc@(CompactCompose _ _ _) `o` (InjectRefl  (MonoRefl)) = cc
+   (CompactCompose in1 out1 size) `o` (InjectRefl  (PolyRefl)) = CompactCompose  in1 out1 size
+   (CompactCompose in1 out1 size) `o` (InjectRefl  (MonoRefl !_p)) = CompactCompose  in1 out1 size
    (CompactCompose _cmiddle2 cout sizeleft)
     `o` (CompactCompose cin _cmiddle1 sizeright) = CompactCompose cin cout (sizeright + sizeleft)
       --- TODO is this case to lazy?
@@ -77,37 +78,24 @@ data TreeEq :: (k -> Type ) -> k -> k -> Type where
 
 
 --- this might limit a,c to being kind (or sort?) * / Type for now, but thats OK ??
-treeElimination :: TestEquality f => Inject f a b -> Extract f b c -> {- Maybe Wrapped? -} Maybe (TreeEq f a c)
-treeElimination (InjectRefl fa) (Dual  (InjectRefl fb)) =
-             case testEquality fa fb of
-              -- VARIABLE EQUALITY, are they the same?
-              Just Refl -> Just TreeRefl
-              Nothing -> Nothing -- THIS SHOULDN"T BE
+treeElimination :: TestEquality f => Inject f a b -> Extract f  b  c->  (TreeEq f a c)
+treeElimination (InjectRefl PolyRefl) (Dual  (InjectRefl PolyRefl)) =  TreeRefl
+treeElimination (InjectRefl (MonoRefl _p1)) (Dual  (InjectRefl PolyRefl)) =  TreeRefl
+treeElimination (InjectRefl PolyRefl) (Dual  (InjectRefl (MonoRefl _p2))) =  TreeRefl
+treeElimination (InjectRefl (MonoRefl _p1)) (Dual (InjectRefl(MonoRefl _p2))) =  TreeRefl
+treeElimination (CompactCompose fa _fb1 n1) (Dual (CompactCompose fc _fb2 n2)) =
+         case (compare n1 n2, max n1 n2 - min n1 n2) of
+                        (EQ, _ )-> (unsafeCoerce TreeRefl) :: TreeEq f a c
+                          --- if the path is zero length they must be equal!
+                          --- AUDIT MEEEE
+                        (GT, m )->  TreeInject (CompactCompose fa fc  m)
+                        (LT, m ) -> TreeExtract (Dual (CompactCompose fc fa m))
+treeElimination   (InjectRefl p@(PolyRefl))
+                  d@(Dual (CompactCompose _fc _fb _n)) = treeElimination (CompactCompose p p 0) d
+treeElimination   (InjectRefl p@(MonoRefl _))
+                  d@(Dual (CompactCompose _fc _fb _n)) = treeElimination (CompactCompose p p 0) d
+treeElimination   d@( CompactCompose _fc _fb _n)
+                  (Dual (InjectRefl p@(PolyRefl))) = treeElimination d (Dual (CompactCompose p p 0))
+treeElimination   d@(CompactCompose _fc _fb _n)
+                  (Dual (InjectRefl p@(MonoRefl _))) = treeElimination d (Dual (CompactCompose p p 0))
 
-treeElimination (CompactCompose fa fb1 n1) (Dual (CompactCompose fc fb2 n2)) =
-    case testEquality fb1 fb2 of  -- this may be needless
-        Nothing -> error "defensive programming explosion of sadness"
-        Just Refl -> case (compare n1 n2, max n1 n2 - min n1 n2) of
-                        (EQ, _ )-> case _wat fa fc of
-                                      Nothing -> Nothing
-                                      Just Refl -> Just TreeRefl
-                        (GT, m )-> Just $ TreeInject (CompactCompose fa fc  m)
-                        (LT, m ) -> Just $ TreeExtract (Dual (CompactCompose fc fa m))
---treeElimination   p@PolyId (Dual (CompactCompose fc fb n))
---        | n == 0 = case testEquality fb fc of
---                      Nothing -> Nothing
---                      Just Refl -> Just TreeRefl
---        | otherwise = Just $ TreeExtract (Dual (CompactCompose fc p n ))
-treeElimination   f@(InjectRefl fa) d@(Dual (CompactCompose _ _ _))  =
-      treeElimination (CompactCompose fa fa 0) d
-treeElimination   c@(CompactCompose _ _ _) (Dual fd@(InjectRefl fc)) =
-      treeElimination c (Dual (CompactCompose fc fc 0))
-
--- FINISH the rest of the cases
-
-
-
-{-
-is extract literally the same datastructure just with a fresh name?
-
--}
