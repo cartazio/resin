@@ -5,7 +5,13 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Resin.Binders.Tree where
+module Resin.Binders.Tree(
+  IxEq(..)
+  ,Inject(InjectRefl)
+  ,Extract(Dual) -- Extract is just a newtype wrapper .. for now
+  ,TreeEq(..)
+  ,treeElimination
+  ) where
 import Data.Kind
 import Numeric.Natural
 import Data.Semigroupoid
@@ -47,7 +53,10 @@ data Inject :: (k -> Type ) -> k -> k -> Type where
   -- compact compose is unsafe for users, but should be exposed in a .Internal
   -- module
 
-
+rightExtend :: Inject p a b -> p c -> Inject p a c
+rightExtend (InjectRefl PolyRefl) rP = CompactCompose PolyRefl (MonoRefl rP) 1
+rightExtend (InjectRefl (MonoRefl f)) rP = CompactCompose (MonoRefl f) (MonoRefl rP) 1
+rightExtend (CompactCompose pa pb n) rP = CompactCompose pa (MonoRefl rP) (n+1 )
 
 instance Semigroupoid (Inject f) where
    --PolyId `o`  PolyId =  PolyId
