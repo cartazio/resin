@@ -65,6 +65,7 @@ library
 
                       -- ,
                       Resin.Binders.Tree
+                      ,Resin.Binders.Tree.Internal
 
                    --   ,Resin.Calculus.Derivatives
 
