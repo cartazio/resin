@@ -55,7 +55,7 @@ cabal-version:       >=1.10
 
 source-repository head
   type: git
-  location: https://github.com/cartazio/ralist.git
+  location: https://github.com/cartazio/resin.git
 
 library
   -- Modules exported by the library.
