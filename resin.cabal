@@ -10,7 +10,7 @@ name:                resin
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.0
+version:             0.1.0.1
 
 -- A short (one-line) description of the package.
 synopsis:            High performance variable binders
@@ -83,14 +83,14 @@ library
 
   -- Directories containing source files.
   hs-source-dirs:      src
+
+  ghc-options: -Wall
+
   if impl(ghc >= 8.0) && impl(ghc < 8.2)
     ghc-options: -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   if impl(ghc >= 8.0) && impl(ghc < 8.2)
     ghc-options: -Wno-redundant-constraints
-  else
-    -- provide/emulate `Control.Monad.Fail` and `Data.Semigroups` API for pre-GHC8
-    build-depends: fail == 4.9.*, semigroups == 0.18.*
-  ghc-options: -Wall
+
   -- Base language which the package is written in.
   default-language:    Haskell2010
 
