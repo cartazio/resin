@@ -16,10 +16,11 @@ version:             0.1.0.0
 synopsis:            High performance variable binders
 
 -- A longer description of the package.
--- description:
+description: High Performance Variable Binders library
 
 -- URL for the project homepage or repository.
 homepage:            http://github.com/cartazio/resin
+
 
 -- The license under which the package is released.
 license:             BSD2
@@ -41,24 +42,32 @@ category:            Language
 
 build-type:          Simple
 
+
+
 -- Extra files to be distributed with the package, such as examples or a
 -- README.
 extra-source-files:  readme.md
 
+
+
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
 
+source-repository head
+  type: git
+  location: https://github.com/cartazio/ralist.git
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Resin
+  exposed-modules:
+                      -- Resin
 
-                      ,Resin.Binders.Tree
+                      -- ,
+                      Resin.Binders.Tree
 
-                      ,Resin.Calculus.Derivatives
+                   --   ,Resin.Calculus.Derivatives
 
-                      ,Resin.Environment.Class
-                      ,Resin.Environment.Internal.RAList
+                    --  ,Resin.Environment.Class
 
   -- Modules included in this library but not exported.
   -- other-modules:
@@ -67,11 +76,10 @@ library
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:      base >=4.8 && <4.10
+  build-depends:      base >=4.8 && <4.11
                       ,ghc-prim >= 0.4 && < 0.6
-                      ,semigroupoids >= 5.0 && <  5.1
-                      ,profunctors >= 5.2 && < 5.3
-                      ,lens >= 4.15.1 && < 4.16
+                      ,semigroupoids >= 5.0 && <  5.3
+
 
   -- Directories containing source files.
   hs-source-dirs:      src
