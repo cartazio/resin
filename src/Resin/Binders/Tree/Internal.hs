@@ -16,8 +16,6 @@ module Resin.Binders.Tree.Internal(
   ,leftExtendExtract
   ,jumpDepthInject -- not sure if this operation is safe
   ,jumpDepthExtract -- not sure if thats safe too
-  -- | the unsafe subset? .. move the full interface to a .Internal later
-
   ) where
 import Data.Kind
 import Numeric.Natural
@@ -26,6 +24,8 @@ import Data.Semigroupoid
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Type.Equality
 --import qualified Data.Semigroupoid.Dual as DL
+
+
 
 
 {-

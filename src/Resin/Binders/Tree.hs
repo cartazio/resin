@@ -1,4 +1,4 @@
-{-# LANGUAGE Trustworty#-}
+{-# LANGUAGE Trustworthy #-}
 module Resin.Binders.Tree(
   -- | the safe subset of the api... I think
   IxEq(..)
@@ -13,3 +13,4 @@ module Resin.Binders.Tree(
     )
  where
 import Resin.Binders.Tree.Internal
+
