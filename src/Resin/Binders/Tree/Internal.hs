@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts,FlexibleInstances,GADTs,DataKinds, PolyKinds, KindSignatures #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE TypeInType #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeOperators #-}
@@ -17,7 +16,7 @@ module Resin.Binders.Tree.Internal(
   ,jumpDepthInject -- not sure if this operation is safe
   ,jumpDepthExtract -- not sure if thats safe too
   ) where
-import Data.Kind
+
 import Numeric.Natural
 import Data.Semigroupoid
 --import Data.Coerce
@@ -35,7 +34,7 @@ or at least it models some ideas about (finite?) paths on  (finite??!) trees
 -}
 
 
-data IxEq :: (k -> Type ) -> k -> k   -> Type where
+data IxEq :: (k -> * ) -> k -> k   -> *  where
    PolyRefl ::  IxEq f i i
    MonoRefl :: forall f i . f i -> IxEq f i i
 
@@ -50,7 +49,7 @@ instance TestEquality f => TestEquality (IxEq f i) where
 {- | `Inject` is about
 
 -}
-data Inject :: (k -> Type ) -> k -> k -> Type where
+data Inject :: (k -> * ) -> k -> k -> *  where
   InjectRefl :: forall f a b . IxEq f a b->  Inject f a b
   --MonoId :: forall f  i .  (f i) -> Inject f i i
   -- should MonoId be strict in its argument?
@@ -89,7 +88,7 @@ instance Semigroupoid (Inject f) where
 
 -- extract is the dual of Inject
 -- aka Data.Semigroupoid.Dual is nearly the exact same type :)
-newtype Extract :: (k -> Type ) -> k -> k -> Type where
+newtype Extract :: (k -> * ) -> k -> k -> * where
   Dual :: ((Inject f) b a ) -> Extract f a b
 -- not sure if this is the right design vs
   -- :: Inject f b a -> Extract f a b  --- (which has more explicit duality and less newtypery)
@@ -99,7 +98,7 @@ instance Semigroupoid (Extract f) where
   o = \ (Dual l)  (Dual r) -> Dual  $  r `o` l
 
 
-data TreeEq :: (k -> Type ) -> k -> k -> Type where
+data TreeEq :: (k -> * ) -> k -> k -> * where
   TreeInject :: Inject f a b -> TreeEq f a b
   TreeExtract :: Extract f a b -> TreeEq f a b
   TreeRefl :: TreeEq f c c
