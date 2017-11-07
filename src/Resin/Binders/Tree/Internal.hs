@@ -26,7 +26,6 @@ import Data.Type.Equality
 
 
 
-
 {-
 This module models binders which respect scope having a tree shaped topology
 or at least it models some ideas about (finite?) paths on  (finite??!) trees
