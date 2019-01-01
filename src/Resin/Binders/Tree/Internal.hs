@@ -16,7 +16,6 @@ module Resin.Binders.Tree.Internal(
   ,jumpDepthInject -- not sure if this operation is safe
   ,jumpDepthExtract -- not sure if thats safe too
   ) where
-
 import Numeric.Natural
 import Data.Semigroupoid
 --import Data.Coerce
